@@ -19,6 +19,7 @@ jobs:
           args: --check
   clippy:
     runs-on: ubuntu-latest
+    permissions: write-all
     name: ${{ matrix.toolchain }} / clippy
     strategy:
       fail-fast: false
