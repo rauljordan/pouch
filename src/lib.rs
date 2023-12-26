@@ -1,3 +1,73 @@
+//! [`Pouch`](Pouch) implements a bag data structure, also known as a multiset. A bag
+//! can contain anything, with possible duplicates of each item, and items of
+//! different types - it's a free for all!
+//!
+//! [`Pouch`](Pouch) is helpful in a wide range of applications where a heterogeneous
+//! and non-unique collection of items is required.
+//!
+//! The crate comes in two flavors:
+//! - A standard implementation using a standard [`HashMap`](std::collections::HashMap).
+//! - An atomic variant enabled by the `atomic` feature flag, which uses the [`DashMap`](https://github.com/xacrimon/dashmap) crate for thread-safe
+//!   access without locks.
+//!
+//! The lock-free, atomic version of the bag only requires immutable references, allowing
+//! it to be sent across threads safely without using mutexes underneath the hood.
+//!
+//! Types stored in [`Pouch`](Pouch) must implement the [`Any`](std::any::Any) trait. When using the atomic variant, types
+//! must also implement [`Send`](Send) and [`Sync`](Sync).
+//!
+//! # Examples
+//!
+//! Basic usage:
+//!
+//! ```
+//! use pouch::Pouch;
+//! let mut pouch = Pouch::new();
+//!
+//! pouch.insert("hello");
+//! pouch.insert(42);
+//! assert!(pouch.contains("hello"));
+//! assert!(pouch.contains(42));
+//! assert_eq!(pouch.count::<&str>(), 1);
+//!
+//! // Get all of type.
+//! let strings: Vec<&&str> = pouch.get_all_of_type();
+//! assert_eq!(strings.len(), 4);
+//! pouch.insert("foo");
+//! pouch.insert("bar");
+//! pouch.insert("baz");
+//! assert!(strings.contains(&&"foo"));
+//! assert!(strings.contains(&&"bar"));
+//! assert!(strings.contains(&&"baz"));
+//!
+//! // Check the most common type.
+//! assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
+//!
+//! // Clearing the bag.
+//! pouch.clear();
+//! assert!(pouch.is_empty());
+//!
+//! // Add a few items again.
+//! pouch.insert(5);
+//! pouch.insert("foo");
+//!
+//! // Iteration over all elements in the bag
+//! let mut nums: Vec<i32> = vec![];
+//! let mut strs: Vec<&str> = vec![];
+//!
+//! pouch.iter().for_each(|item| {
+//!     if let Some(&t) = item.downcast_ref::<i32>() {
+//!         nums.push(t);
+//!     } else if let Some(&t) = item.downcast_ref::<&str>() {
+//!         strs.push(t);
+//!     } else {
+//!         panic!("unexpected type found in bag");
+//!     }
+//! });
+//! assert_eq!(nums.first(), Some(&5));
+//! assert_eq!(strs.first(), Some(&"foo"));
+//! ```
+
 use std::any::{Any, TypeId};
 
 #[cfg(feature = "atomic")]
@@ -5,36 +75,6 @@ use dashmap::DashMap;
 #[cfg(not(feature = "atomic"))]
 use std::collections::HashMap;
 
-/// `Pouch` implements a bag data structure, also known as a multiset. A bag
-/// can contain anything, with possible duplicates of each item, and items of
-/// different types - it's a free for all!
-///
-/// An lock-free, atomic version of the bag is provided, which only requires immutable references, allowing
-/// it to be sent across threads safely without using mutexes underneath the hood.
-///
-/// `Pouch` is suitable for a wide range of applications where a heterogeneous
-/// and non-unique collection of items is required.
-///
-/// `Pouch` comes in two flavors:
-/// - A standard implementation using a standard `HashMap`.
-/// - An atomic variant enabled by the `atomic` feature flag, which uses the `DashMap` crate for thread-safe
-///   access without locks. The atomic variant is useful for concurrent environments.
-///
-/// Types stored in `Pouch` must implement the `Any` trait. When using the atomic variant, types
-/// must also implement `Send` and `Sync`.
-///
-/// # Examples
-///
-/// Basic usage:
-///
-/// ```
-/// use pouch::Pouch;
-/// let mut pouch = Pouch::new();
-/// pouch.insert("hello");
-/// pouch.insert(42);
-/// assert!(pouch.contains("hello"));
-/// assert!(pouch.contains(42));
-/// ```
 #[cfg_attr(feature = "atomic", doc = "Atomic, lock-free variant of `Pouch`")]
 #[cfg_attr(
     not(feature = "atomic"),
@@ -110,9 +150,6 @@ impl Pouch {
     /// by the generic parameter `T`. It filters the elements in the pouch based on their type.
     ///
     /// Note: This method is available only when the `atomic` feature is not enabled.
-    ///
-    /// # Type Parameters
-    /// - `T`: The type of the elements to retrieve. This type must implement the `Any` trait.
     ///
     /// # Returns
     /// A `Vec<&T>` containing references to all elements of type `T` in the pouch.
@@ -266,6 +303,10 @@ impl Pouch {
     /// `pub fn count<T: Any>(&self) -> u64`
     /// It iterates over the `DashMap` to count the elements of the specified type.
     ///
+    /// Note: the atomic version of this method is slow, as it has O(N) runtime complexity
+    /// where N is the number of elements of a certain type T. In the non-atomic version,
+    /// a mapping of counts is stored so checking counts will be O(1) fast.
+    ///
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
     /// `pub fn count<T: Any>(&self) -> u64`
@@ -320,7 +361,7 @@ impl Pouch {
     ///
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
-    /// `pub fn most_common_type(&self) -> Option<&TypeId>`
+    /// `pub fn most_common_type(&self) -> Option<TypeId>`
     /// It checks the `HashMap` of counts to find the most common type.
     ///
     /// # Examples
@@ -347,7 +388,7 @@ impl Pouch {
     /// ```
     #[cfg(not(feature = "atomic"))]
     pub fn most_common_type(&self) -> Option<TypeId> {
-        self.counts.keys().max().map(|k| k.clone())
+        self.counts.keys().max().copied()
     }
     #[cfg(feature = "atomic")]
     pub fn most_common_type(&self) -> Option<TypeId> {
@@ -380,10 +421,7 @@ impl Pouch {
     #[cfg(not(feature = "atomic"))]
     pub fn insert<T: Any>(&mut self, elem: T) {
         let type_id = TypeId::of::<T>();
-        self.data
-            .entry(type_id)
-            .or_insert_with(Vec::new)
-            .push(Box::new(elem));
+        self.data.entry(type_id).or_default().push(Box::new(elem));
 
         *self.counts.entry(type_id).or_insert(0) += 1;
     }
