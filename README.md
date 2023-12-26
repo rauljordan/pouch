@@ -76,19 +76,16 @@ assert_eq!(nums.first(), Some(&5));
 assert_eq!(strs.first(), Some(&"foo"));
 ```
 
-Add pouch to your Cargo.toml:
+Add pouch to your project
 
 ```toml
-[dependencies]
-pouch = "0.1.0"
+cargo add pouch
 ```
 
 or enable the atomic feature for thread safety:
 
 ```toml
-[dependencies.pouch]
-version = "0.1.0"
-features = ["atomic"] # Enable the atomic variant of the pouch
+cargo add pouch --features=atomic
 ```
 
 ## Contributing
