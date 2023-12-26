@@ -46,6 +46,8 @@
 //! pouch.insert(5);
 //! pouch.insert("foo");
 //!
+//! # #[cfg(not(feature = "atomic"))]
+//! # {
 //! // Iteration over all elements in the bag
 //! let mut nums: Vec<i32> = vec![];
 //! let mut strs: Vec<&str> = vec![];
@@ -61,11 +63,15 @@
 //! });
 //! assert_eq!(nums.first(), Some(&5));
 //! assert_eq!(strs.first(), Some(&"foo"));
+//! # }
 //!
+//! # #[cfg(not(feature = "atomic"))]
+//! # {
 //! // Get all of type.
 //! let strings: Vec<&&str> = pouch.get_all_of_type();
 //! assert_eq!(strings.len(), 1);
 //! assert!(strings.contains(&&"foo"));
+//! # }
 //! ```
 
 use std::any::{Any, TypeId};
