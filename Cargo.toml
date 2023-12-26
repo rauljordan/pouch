@@ -1,0 +1,22 @@
+[package]
+name = "pouch"
+version = "0.1.0"
+edition = "2021"
+authors = ["rauljordan"]
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/rauljordan/pouch"
+repository = "https://github.com/rauljordan/pouch"
+rust-version = "1.71.0"
+
+[dependencies]
+dashmap = { version = "5.5.3", optional = true }
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "insertions"
+harness = false
+
+[features]
+atomic = ["dashmap"]
