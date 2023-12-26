@@ -31,15 +31,9 @@
 //! assert!(pouch.contains(42));
 //! assert_eq!(pouch.count::<&str>(), 1);
 //!
-//! // Get all of type.
-//! let strings: Vec<&&str> = pouch.get_all_of_type();
-//! assert_eq!(strings.len(), 4);
 //! pouch.insert("foo");
 //! pouch.insert("bar");
 //! pouch.insert("baz");
-//! assert!(strings.contains(&&"foo"));
-//! assert!(strings.contains(&&"bar"));
-//! assert!(strings.contains(&&"baz"));
 //!
 //! // Check the most common type.
 //! assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
@@ -67,6 +61,11 @@
 //! });
 //! assert_eq!(nums.first(), Some(&5));
 //! assert_eq!(strs.first(), Some(&"foo"));
+//!
+//! // Get all of type.
+//! let strings: Vec<&&str> = pouch.get_all_of_type();
+//! assert_eq!(strings.len(), 1);
+//! assert!(strings.contains(&&"foo"));
 //! ```
 
 use std::any::{Any, TypeId};

@@ -79,10 +79,9 @@ Add pouch to your Cargo.toml:
 ```toml
 [dependencies]
 pouch = "0.1.0"
-Enable the atomic feature for thread safety:
 ```
 
-or
+or enable the atomic feature for thread safety:
 
 ```toml
 [dependencies.pouch]
