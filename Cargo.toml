@@ -1,7 +1,7 @@
 [package]
 name = "purse"
 description = "Bag data structure implementation in Rust with lock-free, atomic features"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["rauljordan"]
 license = "MIT OR Apache-2.0"
