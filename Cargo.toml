@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 homepage = "https://github.com/rauljordan/pouch"
 repository = "https://github.com/rauljordan/pouch"
 rust-version = "1.71.0"
-keywords = ["bag", "multiset", "data structures"]
+keywords = ["bag", "multiset"]
 categories = ["data structures"]
 
 [dependencies]
