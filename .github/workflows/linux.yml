@@ -9,15 +9,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: (${{ matrix.target }}, ${{ matrix.cfg_release_channel }})
+    name: (${{ matrix.target }}, ${{ matrix.features }})
     env:
-      CFG_RELEASE_CHANNEL: ${{ matrix.cfg_release_channel }}
+      FEATURES: ${{ matrix.features}}
     strategy:
       matrix:
         target: [
           x86_64-unknown-linux-gnu,
         ]
-        cfg_release_channel: [nightly, stable]
+        features: [default, atomic]
 
     steps:
     - name: checkout

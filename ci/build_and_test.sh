@@ -10,9 +10,10 @@ rustc -Vv
 cargo -V
 
 # Build and test main crate
-if [ "$CFG_RELEASE_CHANNEL" == "nightly" ]; then
-    cargo build --locked --all-features
-else
+if [ "$FEATURES" == "default" ]; then
     cargo build --locked
+    cargo test
+else
+    cargo build --locked --features=atomic
+    cargo test --features=atomic
 fi
-cargo test --all-features
