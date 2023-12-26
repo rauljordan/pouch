@@ -1,12 +1,12 @@
 [package]
-name = "pouch"
+name = "purse"
 description = "Bag data structure implementation in Rust with lock-free, atomic features"
 version = "0.1.2"
 edition = "2021"
 authors = ["rauljordan"]
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/rauljordan/pouch"
-repository = "https://github.com/rauljordan/pouch"
+homepage = "https://github.com/rauljordan/purse"
+repository = "https://github.com/rauljordan/purse"
 rust-version = "1.71.0"
 keywords = ["bag", "multiset"]
 categories = ["data structures"]

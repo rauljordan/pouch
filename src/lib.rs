@@ -1,8 +1,8 @@
-//! [`Pouch`](Pouch) implements a bag data structure, also known as a multiset. A bag
+//! [`Purse`](Purse) implements a bag data structure, also known as a multiset. A bag
 //! can contain anything, with possible duplicates of each item, and items of
 //! different types - it's a free for all!
 //!
-//! [`Pouch`](Pouch) is helpful in a wide range of applications where a heterogeneous
+//! [`Purse`](Purse) is helpful in a wide range of applications where a heterogeneous
 //! and non-unique collection of items is required.
 //!
 //! The crate comes in two flavors:
@@ -13,7 +13,7 @@
 //! The lock-free, atomic version of the bag only requires immutable references, allowing
 //! it to be sent across threads safely without using mutexes underneath the hood.
 //!
-//! Types stored in [`Pouch`](Pouch) must implement the [`Any`](std::any::Any) trait. When using the atomic variant, types
+//! Types stored in [`Purse`](Purse) must implement the [`Any`](std::any::Any) trait. When using the atomic variant, types
 //! must also implement [`Send`](Send) and [`Sync`](Sync).
 //!
 //! # Examples
@@ -22,29 +22,29 @@
 //!
 //! ```
 //! use std::any::TypeId;
-//! use pouch::Pouch;
-//! let mut pouch = Pouch::new();
+//! use purse::Purse;
+//! let mut purse = Purse::new();
 //!
-//! pouch.insert("hello");
-//! pouch.insert(42);
-//! assert!(pouch.contains("hello"));
-//! assert!(pouch.contains(42));
-//! assert_eq!(pouch.count::<&str>(), 1);
+//! purse.insert("hello");
+//! purse.insert(42);
+//! assert!(purse.contains("hello"));
+//! assert!(purse.contains(42));
+//! assert_eq!(purse.count::<&str>(), 1);
 //!
-//! pouch.insert("foo");
-//! pouch.insert("bar");
-//! pouch.insert("baz");
+//! purse.insert("foo");
+//! purse.insert("bar");
+//! purse.insert("baz");
 //!
 //! // Check the most common type.
-//! assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
+//! assert_eq!(purse.most_common_type(), Some(TypeId::of::<&str>()));
 //!
 //! // Clearing the bag.
-//! pouch.clear();
-//! assert!(pouch.is_empty());
+//! purse.clear();
+//! assert!(purse.is_empty());
 //!
 //! // Add a few items again.
-//! pouch.insert(5);
-//! pouch.insert("foo");
+//! purse.insert(5);
+//! purse.insert("foo");
 //!
 //! # #[cfg(not(feature = "atomic"))]
 //! # {
@@ -52,7 +52,7 @@
 //! let mut nums: Vec<i32> = vec![];
 //! let mut strs: Vec<&str> = vec![];
 //!
-//! pouch.iter().for_each(|item| {
+//! purse.iter().for_each(|item| {
 //!     if let Some(&t) = item.downcast_ref::<i32>() {
 //!         nums.push(t);
 //!     } else if let Some(&t) = item.downcast_ref::<&str>() {
@@ -68,7 +68,7 @@
 //! # #[cfg(not(feature = "atomic"))]
 //! # {
 //! // Get all of type.
-//! let strings: Vec<&&str> = pouch.get_all_of_type();
+//! let strings: Vec<&&str> = purse.get_all_of_type();
 //! assert_eq!(strings.len(), 1);
 //! assert!(strings.contains(&&"foo"));
 //! # }
@@ -81,13 +81,13 @@ use dashmap::DashMap;
 #[cfg(not(feature = "atomic"))]
 use std::collections::HashMap;
 
-#[cfg_attr(feature = "atomic", doc = "Atomic, lock-free variant of `Pouch`")]
+#[cfg_attr(feature = "atomic", doc = "Atomic, lock-free variant of `Purse`")]
 #[cfg_attr(
     not(feature = "atomic"),
-    doc = "Standard, non-thread-safe variant of `Pouch`."
+    doc = "Standard, non-thread-safe variant of `Purse`."
 )]
 #[derive(Default, Debug)]
-pub struct Pouch {
+pub struct Purse {
     #[cfg(feature = "atomic")]
     data: DashMap<TypeId, Vec<Box<dyn Any + Send + Sync>>>,
     #[cfg(not(feature = "atomic"))]
@@ -96,7 +96,7 @@ pub struct Pouch {
     counts: HashMap<TypeId, u64>,
 }
 
-impl Pouch {
+impl Purse {
     #[cfg(feature = "atomic")]
     pub fn new() -> Self {
         Self {
@@ -110,39 +110,39 @@ impl Pouch {
             counts: HashMap::default(),
         }
     }
-    /// Checks if the pouch is empty.
+    /// Checks if the purse is empty.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
-    /// let mut pouch = Pouch::new();
-    /// assert!(pouch.is_empty());
-    /// pouch.insert("apple");
-    /// assert!(!pouch.is_empty());
+    /// # use purse::Purse;
+    /// let mut purse = Purse::new();
+    /// assert!(purse.is_empty());
+    /// purse.insert("apple");
+    /// assert!(!purse.is_empty());
     /// ```
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
-    /// Provides an iterator over all elements in the pouch.
+    /// Provides an iterator over all elements in the purse.
     ///
-    /// This method returns a boxed iterator that yields references to each element stored in the pouch,
+    /// This method returns a boxed iterator that yields references to each element stored in the purse,
     /// regardless of their type. It iterates over all elements in a non-specific order.
     ///
     /// Note: This method is available only when the `atomic` feature is not enabled.
     ///
     /// # Returns
     /// A `Box<dyn Iterator<Item = &dyn Any> + '_>` that can be used to iterate over all elements
-    /// in the pouch.
+    /// in the purse.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42);
-    /// # pouch.insert("hello");
-    /// for item in pouch.iter() {
+    /// # use purse::Purse;
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42);
+    /// # purse.insert("hello");
+    /// for item in purse.iter() {
     ///     // Process each item
     /// }
     /// ```
@@ -150,24 +150,24 @@ impl Pouch {
     pub fn iter(&self) -> Box<dyn Iterator<Item = &dyn Any> + '_> {
         Box::new(self.data.values().flatten().map(|b| &**b))
     }
-    /// Retrieves all elements of a specific type from the pouch.
+    /// Retrieves all elements of a specific type from the purse.
     ///
     /// This method returns a vector containing references to all elements of the type specified
-    /// by the generic parameter `T`. It filters the elements in the pouch based on their type.
+    /// by the generic parameter `T`. It filters the elements in the purse based on their type.
     ///
     /// Note: This method is available only when the `atomic` feature is not enabled.
     ///
     /// # Returns
-    /// A `Vec<&T>` containing references to all elements of type `T` in the pouch.
+    /// A `Vec<&T>` containing references to all elements of type `T` in the purse.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42);
-    /// # pouch.insert(42);
-    /// let numbers: Vec<&i32> = pouch.get_all_of_type();
+    /// # use purse::Purse;
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42);
+    /// # purse.insert(42);
+    /// let numbers: Vec<&i32> = purse.get_all_of_type();
     /// assert_eq!(numbers.len(), 2);
     /// assert_eq!(*numbers[0], 42);
     /// assert_eq!(*numbers[1], 42);
@@ -182,9 +182,9 @@ impl Pouch {
                 .collect()
         })
     }
-    /// Checks if the pouch contains a given element.
+    /// Checks if the purse contains a given element.
     ///
-    /// This method searches the pouch for an element equal to `t` and returns `true` if it is found.
+    /// This method searches the purse for an element equal to `t` and returns `true` if it is found.
     ///
     /// # Atomic version
     /// For the `atomic` feature, this method signature is:
@@ -194,32 +194,32 @@ impl Pouch {
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
     /// `pub fn contains<T: Any + Eq>(&self, t: T) -> bool`
-    /// This version operates on a `HashMap` and requires immutable access to the pouch.
+    /// This version operates on a `HashMap` and requires immutable access to the purse.
     ///
     /// # Type Parameters
     /// - `T`: The type of the element to check. This type must implement `Any` and `Eq`.
     ///
     /// # Arguments
-    /// - `t`: The element to check for in the pouch.
+    /// - `t`: The element to check for in the purse.
     ///
     /// # Returns
-    /// Returns `true` if the element is found in the pouch, otherwise `false`.
+    /// Returns `true` if the element is found in the purse, otherwise `false`.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert("apple");
-    /// assert!(pouch.contains("apple"));
+    /// let purse = Purse::new();
+    /// purse.insert("apple");
+    /// assert!(purse.contains("apple"));
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert("apple");
-    /// # assert!(pouch.contains("apple"));
+    /// # let mut purse = Purse::new();
+    /// # purse.insert("apple");
+    /// # assert!(purse.contains("apple"));
     /// # }
     /// ```
     #[cfg(not(feature = "atomic"))]
@@ -253,9 +253,9 @@ impl Pouch {
         }
         false
     }
-    /// Retrieves a list of `TypeId`s of the types currently stored in the pouch.
+    /// Retrieves a list of `TypeId`s of the types currently stored in the purse.
     ///
-    /// This method returns a vector containing the `TypeId` of each unique type currently stored in the pouch.
+    /// This method returns a vector containing the `TypeId` of each unique type currently stored in the purse.
     ///
     /// # Atomic version
     /// For the `atomic` feature, this method signature is:
@@ -268,27 +268,27 @@ impl Pouch {
     /// It iterates over a `HashMap` to collect the type identifiers.
     ///
     /// # Returns
-    /// A `Vec<TypeId>` containing the unique type identifiers of all elements stored in the pouch.
+    /// A `Vec<TypeId>` containing the unique type identifiers of all elements stored in the purse.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// # use std::any::{Any, TypeId};
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert(42);
-    /// pouch.insert("apple");
-    /// let types = pouch.types();
+    /// let purse = Purse::new();
+    /// purse.insert(42);
+    /// purse.insert("apple");
+    /// let types = purse.types();
     /// assert_eq!(types, vec![TypeId::of::<i32>(), TypeId::of::<&str>()]);
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42u64);
-    /// # pouch.insert("apple");
-    /// # let types = pouch.types();
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42u64);
+    /// # purse.insert("apple");
+    /// # let types = purse.types();
     /// # assert!(types.contains(&TypeId::of::<&str>()));
     /// # }
     /// ```
@@ -300,7 +300,7 @@ impl Pouch {
     pub fn types(&self) -> Vec<TypeId> {
         self.data.iter().map(|r| r.key().clone()).collect()
     }
-    /// Counts the number of elements of a specific type in the pouch.
+    /// Counts the number of elements of a specific type in the purse.
     ///
     /// This method returns the number of elements of the type specified by the generic parameter `T`.
     ///
@@ -324,23 +324,23 @@ impl Pouch {
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// # use std::any::TypeId;
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert(42);
-    /// pouch.insert(42);
-    /// pouch.insert("hello");
-    /// assert_eq!(pouch.count::<i32>(), 2);
+    /// let purse = Purse::new();
+    /// purse.insert(42);
+    /// purse.insert(42);
+    /// purse.insert("hello");
+    /// assert_eq!(purse.count::<i32>(), 2);
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42);
-    /// # pouch.insert(42);
-    /// # pouch.insert("hello");
-    /// # assert_eq!(pouch.count::<i32>(), 2);
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42);
+    /// # purse.insert(42);
+    /// # purse.insert("hello");
+    /// # assert_eq!(purse.count::<i32>(), 2);
     /// # }
     /// ```
     #[cfg(not(feature = "atomic"))]
@@ -356,7 +356,7 @@ impl Pouch {
         };
         elems.len() as u64
     }
-    /// Determines the most common type stored in the pouch.
+    /// Determines the most common type stored in the purse.
     ///
     /// This method returns the `TypeId` of the most frequently occurring type.
     ///
@@ -373,23 +373,23 @@ impl Pouch {
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// use std::any::TypeId;
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert(42);
-    /// pouch.insert(42);
-    /// pouch.insert("hello");
-    /// assert_eq!(pouch.most_common_type(), Some(TypeId::of::<i32>()));
+    /// let purse = Purse::new();
+    /// purse.insert(42);
+    /// purse.insert(42);
+    /// purse.insert("hello");
+    /// assert_eq!(purse.most_common_type(), Some(TypeId::of::<i32>()));
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42);
-    /// # pouch.insert("hello");
-    /// # pouch.insert("world");
-    /// # assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42);
+    /// # purse.insert("hello");
+    /// # purse.insert("world");
+    /// # assert_eq!(purse.most_common_type(), Some(TypeId::of::<&str>()));
     /// # }
     /// ```
     #[cfg(not(feature = "atomic"))]
@@ -403,12 +403,12 @@ impl Pouch {
             .max_by_key(|r| r.value().len())
             .map(|r| *r.key())
     }
-    /// Inserts an element into the pouch.
+    /// Inserts an element into the purse.
     ///
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
     /// `pub fn insert<T: Any>(&mut self, elem: T)`
-    /// This method requires mutable access to the pouch.
+    /// This method requires mutable access to the purse.
     ///
     /// # Atomic version
     /// For the `atomic` feature, the method signature is:
@@ -419,10 +419,10 @@ impl Pouch {
     ///
     /// # Examples
     /// ```
-    /// # use pouch::Pouch;
-    /// let mut pouch = Pouch::new();
-    /// pouch.insert(42);
-    /// assert!(pouch.contains(42));
+    /// # use purse::Purse;
+    /// let mut purse = Purse::new();
+    /// purse.insert(42);
+    /// assert!(purse.contains(42));
     /// ```
     #[cfg(not(feature = "atomic"))]
     pub fn insert<T: Any>(&mut self, elem: T) {
@@ -439,7 +439,7 @@ impl Pouch {
             .or_insert_with(Vec::new)
             .push(Box::new(elem));
     }
-    /// Removes a single occurrence of an element from the pouch, if present.
+    /// Removes a single occurrence of an element from the purse, if present.
     ///
     /// This method looks for an element equal to `elem` and removes the first occurrence it finds.
     ///
@@ -451,13 +451,13 @@ impl Pouch {
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
     /// `pub fn remove<T: Any + Eq>(&mut self, elem: T) -> bool`
-    /// This version operates on a `HashMap` and requires mutable access to the pouch.
+    /// This version operates on a `HashMap` and requires mutable access to the purse.
     ///
     /// # Type Parameters
     /// - `T`: The type of the element to remove. This type must implement `Any` and `Eq`.
     ///
     /// # Arguments
-    /// - `elem`: The element to remove from the pouch.
+    /// - `elem`: The element to remove from the purse.
     ///
     /// # Returns
     /// Returns `true` if an element was removed, or `false` if no such element was found.
@@ -465,20 +465,20 @@ impl Pouch {
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert("apple");
-    /// assert!(pouch.remove("apple"));
-    /// assert!(!pouch.contains(&"apple"));
+    /// let purse = Purse::new();
+    /// purse.insert("apple");
+    /// assert!(purse.remove("apple"));
+    /// assert!(!purse.contains(&"apple"));
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert("apple");
-    /// # assert!(pouch.remove("apple"));
-    /// # assert!(!pouch.contains(&"apple"));
+    /// # let mut purse = Purse::new();
+    /// # purse.insert("apple");
+    /// # assert!(purse.remove("apple"));
+    /// # assert!(!purse.contains(&"apple"));
     /// # }
     /// ```
     #[cfg(not(feature = "atomic"))]
@@ -511,37 +511,37 @@ impl Pouch {
         }
         false
     }
-    /// Clears all elements from the pouch.
+    /// Clears all elements from the purse.
     ///
-    /// This method removes all elements from the pouch, effectively resetting it to its initial state.
+    /// This method removes all elements from the purse, effectively resetting it to its initial state.
     ///
     /// # Atomic version
     /// For the `atomic` feature, this method signature is:
     /// `pub fn clear(&self)`
-    /// It clears the `DashMap` and does not require mutable access to the pouch, maintaining thread safety.
+    /// It clears the `DashMap` and does not require mutable access to the purse, maintaining thread safety.
     ///
     /// # Non-Atomic version
     /// For the standard version without the `atomic` feature, the method signature is:
     /// `pub fn clear(&mut self)`
-    /// It clears both the `HashMap` storing the elements and the `HashMap` tracking the counts, requiring mutable access to the pouch.
+    /// It clears both the `HashMap` storing the elements and the `HashMap` tracking the counts, requiring mutable access to the purse.
     ///
     /// # Examples
     ///
     /// ```
-    /// # use pouch::Pouch;
+    /// # use purse::Purse;
     /// # #[cfg(feature = "atomic")]
     /// # {
-    /// let pouch = Pouch::new();
-    /// pouch.insert(42);
-    /// pouch.clear();
-    /// assert!(pouch.is_empty());
+    /// let purse = Purse::new();
+    /// purse.insert(42);
+    /// purse.clear();
+    /// assert!(purse.is_empty());
     /// # }
     /// # #[cfg(not(feature = "atomic"))]
     /// # {
-    /// # let mut pouch = Pouch::new();
-    /// # pouch.insert(42);
-    /// # pouch.clear();
-    /// # assert!(pouch.is_empty());
+    /// # let mut purse = Purse::new();
+    /// # purse.insert(42);
+    /// # purse.clear();
+    /// # assert!(purse.is_empty());
     /// # }
     /// ```
     #[cfg(not(feature = "atomic"))]
@@ -564,23 +564,23 @@ mod tests {
     fn test_thread_safe() {
         use std::sync::Arc;
         use std::thread;
-        let pouch = Arc::new(Pouch::new());
+        let purse = Arc::new(Purse::new());
 
         let mut handles = vec![];
         for i in 0..10i32 {
-            let pouch = pouch.clone();
+            let purse = purse.clone();
             handles.push(thread::spawn(move || {
-                pouch.insert(i);
+                purse.insert(i);
             }));
         }
         for handle in handles {
             handle.join().unwrap();
         }
-        assert_eq!(pouch.count::<i32>(), 10);
+        assert_eq!(purse.count::<i32>(), 10);
     }
 
     #[test]
-    fn test_pouch() {
+    fn test_purse() {
         #[derive(PartialEq, Eq, Clone, Copy, Debug)]
         enum RPS {
             Rock,
@@ -588,34 +588,34 @@ mod tests {
             Scissors,
         }
         #[cfg(feature = "atomic")]
-        let pouch = Pouch::new();
+        let purse = Purse::new();
         #[cfg(not(feature = "atomic"))]
-        let mut pouch = Pouch::new();
+        let mut purse = Purse::new();
 
-        pouch.insert(5);
-        pouch.insert("foo");
-        pouch.insert(RPS::Rock);
-        pouch.insert(RPS::Paper);
+        purse.insert(5);
+        purse.insert("foo");
+        purse.insert(RPS::Rock);
+        purse.insert(RPS::Paper);
 
         // Check if items are contained.
-        assert!(pouch.contains("foo"));
-        assert!(!pouch.contains("bar"));
-        assert!(!pouch.contains(0));
-        assert!(pouch.contains(RPS::Rock));
-        assert!(!pouch.contains(RPS::Scissors));
+        assert!(purse.contains("foo"));
+        assert!(!purse.contains("bar"));
+        assert!(!purse.contains(0));
+        assert!(purse.contains(RPS::Rock));
+        assert!(!purse.contains(RPS::Scissors));
 
         // Check removal of items.
-        pouch.remove(RPS::Rock);
-        assert!(!pouch.contains(RPS::Rock));
+        purse.remove(RPS::Rock);
+        assert!(!purse.contains(RPS::Rock));
 
         // Check counts.
-        assert_eq!(pouch.count::<&str>(), 1);
-        pouch.insert("bar");
-        pouch.insert("baz");
-        assert_eq!(pouch.count::<&str>(), 3);
+        assert_eq!(purse.count::<&str>(), 1);
+        purse.insert("bar");
+        purse.insert("baz");
+        assert_eq!(purse.count::<&str>(), 3);
 
         // Check types.
-        let types = pouch.types();
+        let types = purse.types();
         assert_eq!(types.len(), 3);
         assert!(types.contains(&TypeId::of::<i32>()));
         assert!(types.contains(&TypeId::of::<&str>()));
@@ -624,7 +624,7 @@ mod tests {
         #[cfg(not(feature = "atomic"))]
         {
             // Get all of type.
-            let strings: Vec<&&str> = pouch.get_all_of_type();
+            let strings: Vec<&&str> = purse.get_all_of_type();
             assert_eq!(strings.len(), 3);
             assert!(strings.contains(&&"foo"));
             assert!(strings.contains(&&"bar"));
@@ -633,18 +633,18 @@ mod tests {
 
         // Check the most common type.
         #[cfg(feature = "atomic")]
-        assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
+        assert_eq!(purse.most_common_type(), Some(TypeId::of::<&str>()));
         #[cfg(not(feature = "atomic"))]
-        assert_eq!(pouch.most_common_type(), Some(TypeId::of::<&str>()));
+        assert_eq!(purse.most_common_type(), Some(TypeId::of::<&str>()));
 
         // Clearing the bag.
-        pouch.clear();
-        assert!(pouch.is_empty());
+        purse.clear();
+        assert!(purse.is_empty());
 
         // Add a few items again.
-        pouch.insert(5);
-        pouch.insert("foo");
-        pouch.insert(RPS::Paper);
+        purse.insert(5);
+        purse.insert("foo");
+        purse.insert(RPS::Paper);
 
         #[cfg(not(feature = "atomic"))]
         {
@@ -653,7 +653,7 @@ mod tests {
             let mut strs: Vec<&str> = vec![];
             let mut moves: Vec<RPS> = vec![];
 
-            pouch.iter().for_each(|item| {
+            purse.iter().for_each(|item| {
                 if let Some(&t) = item.downcast_ref::<i32>() {
                     nums.push(t);
                 } else if let Some(&t) = item.downcast_ref::<&str>() {
