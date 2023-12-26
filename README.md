@@ -78,13 +78,13 @@ assert_eq!(strs.first(), Some(&"foo"));
 
 Add purse to your project
 
-```toml
+```
 cargo add purse
 ```
 
 or enable the atomic feature for thread safety:
 
-```toml
+```
 cargo add purse --features=atomic
 ```
 
