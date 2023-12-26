@@ -21,6 +21,7 @@
 //! Basic usage:
 //!
 //! ```
+//! use std::any::TypeId;
 //! use pouch::Pouch;
 //! let mut pouch = Pouch::new();
 //!
