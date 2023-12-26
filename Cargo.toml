@@ -1,12 +1,15 @@
 [package]
 name = "pouch"
-version = "0.1.1"
+description = "Bag data structure implementation in Rust with lock-free, atomic features"
+version = "0.1.2"
 edition = "2021"
 authors = ["rauljordan"]
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/rauljordan/pouch"
 repository = "https://github.com/rauljordan/pouch"
-rust-version = "1.74.0"
+rust-version = "1.71.0"
+keywords = ["bag", "multiset", "data structures"]
+categories = ["data structures"]
 
 [dependencies]
 dashmap = { version = "5.5.3", optional = true }
