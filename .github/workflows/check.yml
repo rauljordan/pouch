@@ -1,3 +1,5 @@
+name: check
+on: push
 jobs:
   fmt:
     runs-on: ubuntu-latest

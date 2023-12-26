@@ -1,4 +1,6 @@
 # Pouch: Bag data structure implementation in Rust with lock-free, atomic features
+[![mac](https://github.com/rauljordan/pouch/actions/workflows/mac.yml/badge.svg)](https://github.com/rauljordan/pouch/actions/workflows/mac.yml)
+[![linux](https://github.com/rauljordan/pouch/actions/workflows/linux.yml/badge.svg)](https://github.com/rauljordan/pouch/actions/workflows/linux.yml)
 
 ## Overview
 
