@@ -1,6 +1,6 @@
 [package]
 name = "purse"
-description = "Bag data structure implementation in Rust with lock-free, atomic features"
+description = "Bag data structure implementation in Rust"
 version = "0.1.3"
 edition = "2021"
 authors = ["rauljordan"]
@@ -11,15 +11,9 @@ rust-version = "1.71.0"
 keywords = ["bag", "multiset"]
 categories = ["data structures"]
 
-[dependencies]
-dashmap = { version = "5.5.3", optional = true }
-
 [dev-dependencies]
 criterion = "0.3"
 
 [[bench]]
 name = "insertions"
 harness = false
-
-[features]
-atomic = ["dashmap"]
